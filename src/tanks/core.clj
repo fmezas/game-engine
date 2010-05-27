@@ -1,2 +1,2 @@
 (ns tanks.core
-  :use tanks.game)
+  (:use tanks.game))
