@@ -1,6 +1,6 @@
 (ns tanks.core-test
-  (:use [tanks.core] :reload-all)
-  (:use [clojure.test]))
+  (:use tanks.core
+        clojure.test))
 
 (deftest replace-me ;; FIXME: write
   (is false))
