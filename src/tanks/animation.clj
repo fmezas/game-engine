@@ -60,22 +60,24 @@
 		sleep-time (- period (- end-time start-time) oversleep-time)
                 [st os xs dlys] (sleep-or-yield sleep-time end-time excess delays delays-per-yield)]
             (recur (long st) os xs dlys)))))))
+(defn process-key-event [obj k type]
+  (when-let [h (((meta @obj) type) k)] (h obj)))
 (defn process-key-pressed [obj k]
-  (when-let [h (((meta @obj) :kp-hdlrs) k)] (h obj)))
+  (process-key-event obj k :kp-hdlrs))
 (defn process-key-released [obj k]
-  (when-let [h (((meta @obj) :kr-hdlrs) k)] (h obj)))
-(defn listen-to-keys [panel game-objects]
-  (.addKeyListener panel
-   (proxy [KeyAdapter] []
+  (process-key-event obj k :kr-hdlrs))
+(defn make-key-listener [game-objects]
+  (proxy [KeyAdapter] []
      (keyPressed [e]
                  (doseq [obj game-objects]
                    (process-key-pressed obj (.getKeyCode e))))
      (keyReleased [e]
                   (doseq [obj game-objects]
-                    (process-key-released obj (.getKeyCode e)))))))
-(defn make-panel []
+                    (process-key-released obj (.getKeyCode e))))))
+(defn make-panel [key-listener]
   (let [panel (JPanel.)]
     (doto panel
+      (.addKeyListener key-listener)
       (.setBackground (Color/white))
       (.setPreferredSize (Dimension. 500 400))
       (.setFocusable true)
@@ -90,9 +92,9 @@
       (.setVisible true))))
 (defn game [game-objects]
   (System/setProperty "sun.java2d.opengl" "true")
-  (let [panel (make-panel)
+  (let [key-listener (make-key-listener game-objects)
+        panel (make-panel key-listener)
 	frame (make-frame panel)
 	animator (make-animator panel game-objects)]
-    (listen-to-keys panel game-objects)
     (.start (Thread. animator))
-    'nil))
+    nil))
