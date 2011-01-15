@@ -1,2 +1,3 @@
-(ns tanks.core
+(ns tanks
   (:use tanks.game))
+  (start)

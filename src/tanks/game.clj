@@ -1,15 +1,15 @@
 (ns tanks.game
   (:use [clojure.contrib.import-static :only (import-static)]
         [clojure.contrib.generic.math-functions :only (sin cos abs)]
-        tanks.animation)
+        engine.engine)
   (:import (java.awt Color)
            (javax.imageio ImageIO)))
 (import-static java.awt.event.KeyEvent VK_LEFT VK_RIGHT VK_UP VK_DOWN VK_A VK_D VK_W VK_S)
 (defn load-fire-image []
-  (ImageIO/read (ClassLoader/getSystemResource "images/fire.gif")))
+  (ImageIO/read (ClassLoader/getSystemResource "tanks/images/fire.gif")))
 (defn load-tank-images []
   (let [angles (range 0 360 15)
-        names (map #(str "images/tank_" (.replace (format "%3d" %) \ \0) ".gif")
+        names (map #(str "tanks/images/tank_" (.replace (format "%3d" %) \ \0) ".gif")
                    (range 0 360 15))
         files (map #(ImageIO/read (ClassLoader/getSystemResource %)) names)
         l (map #(list (keyword (str %1)) %2) angles files)]
