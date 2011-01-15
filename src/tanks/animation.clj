@@ -4,7 +4,7 @@
            (javax.imageio ImageIO)
 	   (java.awt Color Dimension GraphicsEnvironment Toolkit)
 	   (java.awt.event KeyAdapter)))
-(import-static javax.swing.WindowConstants DISPOSE_ON_CLOSE)
+(import-static javax.swing.WindowConstants EXIT_ON_CLOSE)
 (import-static java.awt.RenderingHints
                KEY_ANTIALIASING VALUE_ANTIALIAS_ON KEY_INTERPOLATION
                VALUE_INTERPOLATION_BILINEAR)
@@ -85,7 +85,7 @@
 (defn make-frame [panel]
   (let [frame (JFrame. "tanks")]
     (doto frame
-      (.setDefaultCloseOperation DISPOSE_ON_CLOSE)
+      (.setDefaultCloseOperation EXIT_ON_CLOSE)
       (.add panel)
       (.pack)
       (.setResizable false)
