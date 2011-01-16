@@ -107,15 +107,16 @@
 (defn make-tanks [& data]
   (let [tanks (ref #{})]
     (map #(apply make-tank (concat % [tanks])) (partition 2 data))))
+(defn read-from-file []
+  (list {:position {:x 100 :y 100}
+         :angle 0
+         :speed 0
+         :angular-speed 0}
+        {:left VK_LEFT :right VK_RIGHT :up VK_UP :fire VK_DOWN}
+        {:position {:x 300 :y 100}
+         :angle 180
+         :speed 0
+         :angular-speed 0}
+        {:left VK_A :right VK_D :up VK_W :fire VK_S}))
 (defn start []
-  (let [objs (make-tanks {:position {:x 100 :y 100}
-                          :angle 0
-                          :speed 0
-                          :angular-speed 0}
-                         {:left VK_LEFT :right VK_RIGHT :up VK_UP :fire VK_DOWN}
-                         {:position {:x 300 :y 100}
-                          :angle 180
-                          :speed 0
-                          :angular-speed 0}
-                         {:left VK_A :right VK_D :up VK_W :fire VK_S})]
-    (game (map #(ref %) objs))))
+  (game (map #(ref %) (apply make-tanks (read-from-file)))))
