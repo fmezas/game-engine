@@ -36,15 +36,6 @@
 (defn impact? [p1 p2]
   (and (> 4 (abs (- (+ (:x p1) 14) (:x p2))))
        (> 4 (abs (- (+ (:y p1) 14) (:y p2))))))
-(defn check-for-impact [t tanks]
-  (when-let [b (:bullet @t)]
-    (doseq [ot @tanks]
-      (if-not (= t ot)
-        (let [pot (:position @ot)
-              pb (:position b)]
-          (when (impact? pot pb)
-            (alter ot #(assoc % :hit true :speed 0 :angular-speed 0))
-            (alter t dissoc :bullet)))))))
 (defn update-bullet [t]
   (if-let [b (:bullet t)]
     (if-let [np (move-bullet b)]
@@ -54,13 +45,23 @@
     :angle (turn t)
     :position (move-tank t)
     :bullet (update-bullet t)))
-(defn make-tank-updater [tanks]
-  (fn [tank]
-    (if-not (:hit @tank)
-      (dosync
-       (alter tank update-tank)
-       (alter tanks #(conj %1 %2) tank)
-       (check-for-impact tank tanks)))))
+(let [tanks (ref #{})]
+  (defn check-for-impact [t]
+    (when-let [b (:bullet @t)]
+      (doseq [ot @tanks]
+        (if-not (= t ot)
+          (let [pot (:position @ot)
+                pb (:position b)]
+            (when (impact? pot pb)
+              (alter ot #(assoc % :hit true :speed 0 :angular-speed 0))
+              (alter t dissoc :bullet)))))))
+  (defn make-tank-updater []
+    (fn [tank]
+      (if-not (:hit @tank)
+        (dosync
+         (alter tank update-tank)
+         (alter tanks #(conj %1 %2) tank)
+         (check-for-impact tank))))))
 (defn make-bullet [t]
   (let [p (:position t)]
     {:position {:x (+ (:x p) 14)
@@ -92,8 +93,8 @@
         (when-let [b (:bullet t)]
           (.setColor g (Color/black))
           (.fillOval g (int (:x (:position b))) (int (:y (:position b))) 4 4))))))
-(defn make-tank [tank keys tanks]
-  (let [tank-updater (make-tank-updater tanks)
+(defn make-tank [tank keys]
+  (let [tank-updater (make-tank-updater)
         tank-renderer (make-tank-renderer)]
     (with-meta tank {:updater tank-updater
                      :renderer tank-renderer
@@ -104,9 +105,8 @@
                      :kr-hdlrs {(:left keys) stop-turning!
                                 (:right keys) stop-turning!
                                 (:up keys) stop-moving!}})))
-(defn make-tanks [& data]
-  (let [tanks (ref #{})]
-    (map #(apply make-tank (concat % [tanks])) (partition 2 data))))
+(defn make-tanks [data]
+    (map #(apply make-tank %) (partition 2 data)))
 (defn read-from-file []
   (list {:position {:x 100 :y 100}
          :angle 0
@@ -119,4 +119,4 @@
          :angular-speed 0}
         {:left VK_A :right VK_D :up VK_W :fire VK_S}))
 (defn start []
-  (game (map #(ref %) (apply make-tanks (read-from-file)))))
+  (game (map #(ref %) (make-tanks (read-from-file)))))
