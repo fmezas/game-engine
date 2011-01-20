@@ -2,8 +2,9 @@
   (:use [clojure.contrib.import-static :only (import-static)]
         [clojure.contrib.generic.math-functions :only (sin cos abs)]
         engine.engine)
-  (:import (java.awt Color)
+  (:import (java.awt Color GraphicsEnvironment)
            (javax.imageio ImageIO)))
+(import-static java.awt.Transparency TRANSLUCENT)
 (import-static java.awt.event.KeyEvent VK_LEFT VK_RIGHT VK_UP VK_DOWN VK_A VK_D VK_W VK_S)
 (defn load-fire-image []
   (ImageIO/read (ClassLoader/getSystemResource "tanks/images/fire.gif")))
@@ -96,15 +97,15 @@
 (defn make-tank [tank keys]
   (let [tank-updater (make-tank-updater)
         tank-renderer (make-tank-renderer)]
-    (with-meta tank {:updater tank-updater
-                     :renderer tank-renderer
-                     :kp-hdlrs {(:left keys) turn-left!
-                                (:right keys) turn-right!
-                                (:up keys) move-forward!
-                                (:fire keys) fire!}
-                     :kr-hdlrs {(:left keys) stop-turning!
-                                (:right keys) stop-turning!
-                                (:up keys) stop-moving!}})))
+    (ref (with-meta tank {:updater tank-updater
+                          :renderer tank-renderer
+                          :kp-hdlrs {(:left keys) turn-left!
+                                     (:right keys) turn-right!
+                                     (:up keys) move-forward!
+                                     (:fire keys) fire!}
+                          :kr-hdlrs {(:left keys) stop-turning!
+                                     (:right keys) stop-turning!
+                                     (:up keys) stop-moving!}}))))
 (defn make-tanks [data]
     (map #(apply make-tank %) (partition 2 data)))
 (defn read-from-file []
@@ -118,5 +119,32 @@
          :speed 0
          :angular-speed 0}
         {:left VK_A :right VK_D :up VK_W :fire VK_S}))
+(defn make-world []
+  (let [world (make-tanks (read-from-file))
+        update-object (fn [obj] (((meta @obj) :updater) obj))
+        render-object (fn [obj g] (((meta @obj) :renderer) obj g))
+        process-key-event (fn [obj k type]
+                            (when-let [h (((meta @obj) type) k)] (h obj)))
+        process-key-pressed (fn [obj k] (process-key-event obj k :kp-hdlrs))
+        process-key-released (fn [obj k] (process-key-event obj k :kr-hdlrs))]
+    (with-meta
+      world
+      {:key-pressed
+       (fn [code] (doseq [obj world] (process-key-pressed obj code)))
+       :key-released
+       (fn [code] (doseq [obj world] (process-key-released obj code)))
+       :update
+       (fn [] (doseq [obj world] (update-object obj)))
+       :render
+       (fn []
+         (let [gc (.. GraphicsEnvironment getLocalGraphicsEnvironment
+                      getDefaultScreenDevice getDefaultConfiguration)
+               ci (.createCompatibleImage gc 500 400 TRANSLUCENT)
+               g (.createGraphics ci)]
+           (.setColor g (Color/white))
+           (.fillRect g 0 0 500 400)
+           (doseq [obj world] (render-object obj g))
+           (.dispose g)
+           ci))})))
 (defn start []
-  (game (map #(ref %) (make-tanks (read-from-file)))))
+  (game (make-world)))
