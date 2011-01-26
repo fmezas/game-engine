@@ -26,13 +26,13 @@
           oversleep-time 0]
       (if yields (Thread/yield))
       [(System/nanoTime) 0 (- excess sleep-time) (if yields 0 delays)])))
-(defn paint [panel i]
-  (if-let [g (.getGraphics panel)]
-    (.drawImage g i 0 0 nil)))
-(defn update [world]
-  (((meta world) :update)))
 (defn render [world]
   (((meta world) :render)))
+(defn paint [panel world]
+  (if-let [g (.getGraphics panel)]
+    (.drawImage g (render world) 0 0 nil)))
+(defn update [world]
+  (((meta world) :update)))
 (defn make-animator [panel world]
   (fn []
     (let [running (atom true)
@@ -45,7 +45,7 @@
 	     delays 0]
 	(when (and (.isDisplayable panel) @running)
           (update world)
-          (paint panel (render world))
+          (paint panel world)
 	  (let [end-time (System/nanoTime)
 		sleep-time (- period (- end-time start-time) oversleep-time)
                 [st os xs dlys] (sleep-or-yield sleep-time end-time excess delays delays-per-yield)]
