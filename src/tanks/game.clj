@@ -94,9 +94,10 @@
         (when-let [b (:bullet t)]
           (.setColor g (Color/black))
           (.fillOval g (int (:x (:position b))) (int (:y (:position b))) 4 4))))))
-(defn make-tank [tank keys]
+(defn make-tank [tank]
   (let [tank-updater (make-tank-updater)
-        tank-renderer (make-tank-renderer)]
+        tank-renderer (make-tank-renderer)
+        keys (:keys tank)]
     (ref (with-meta tank {:updater tank-updater
                           :renderer tank-renderer
                           :kp-hdlrs {(:left keys) turn-left!
@@ -107,18 +108,18 @@
                                      (:right keys) stop-turning!
                                      (:up keys) stop-moving!}}))))
 (defn make-tanks [data]
-    (map #(apply make-tank %) (partition 2 data)))
+    (map make-tank data))
 (defn read-from-file []
   (list {:position {:x 100 :y 100}
          :angle 0
          :speed 0
-         :angular-speed 0}
-        {:left VK_LEFT :right VK_RIGHT :up VK_UP :fire VK_DOWN}
+         :angular-speed 0
+         :keys {:left VK_LEFT :right VK_RIGHT :up VK_UP :fire VK_DOWN}}
         {:position {:x 300 :y 100}
          :angle 180
          :speed 0
-         :angular-speed 0}
-        {:left VK_A :right VK_D :up VK_W :fire VK_S}))
+         :angular-speed 0
+         :keys {:left VK_A :right VK_D :up VK_W :fire VK_S}}))
 (defn make-world []
   (let [world (make-tanks (read-from-file))
         update-object (fn [obj] (((meta @obj) :updater) obj))
