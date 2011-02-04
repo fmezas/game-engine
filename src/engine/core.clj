@@ -1,17 +1,9 @@
-(ns engine.engine
+(ns engine.core
   (:use [clojure.contrib.import-static :only (import-static)])
-  (:import (java.awt Color)
-           (javax.imageio ImageIO)
-           (javax.swing JFrame JPanel)
-           (javax.imageio ImageIO)
-	   (java.awt Color Dimension GraphicsEnvironment Toolkit)
+  (:import (javax.swing JFrame JPanel)
+	   (java.awt Color Dimension)
 	   (java.awt.event KeyAdapter)))
 (import-static javax.swing.WindowConstants DISPOSE_ON_CLOSE)
-(import-static java.awt.RenderingHints
-               KEY_ANTIALIASING VALUE_ANTIALIAS_ON KEY_INTERPOLATION
-               VALUE_INTERPOLATION_BILINEAR)
-(import-static java.awt.Transparency TRANSLUCENT)
-(import-static java.awt.event.KeyEvent VK_LEFT VK_RIGHT VK_UP VK_DOWN VK_A VK_D VK_W VK_S)
 (defn sleep-or-yield [sleep-time end-time excess delays dlys-pr-yld]
   (if (> sleep-time 0)
     (do

@@ -3,7 +3,7 @@
         [clojure.contrib.generic.math-functions :only (sin cos abs)]
         tanks.resources
         tanks.movement
-        engine.engine)
+        engine.core)
   (:import (java.awt Color GraphicsEnvironment)))
 (import-static java.awt.Transparency TRANSLUCENT)
 (let [impact?
@@ -45,27 +45,33 @@
           (.fillOval g (int (:x (:position b))) (int (:y (:position b))) 4 4))))))
 (defn make-tank [tank]
   (let [keys (:keys tank)]
-    (ref (with-meta tank {:updater (make-tank-updater)
-                          :renderer (make-tank-renderer)
-                          :kp-hdlrs {(:left keys) turn-left!
-                                     (:right keys) turn-right!
-                                     (:up keys) move-forward!
-                                     (:fire keys) fire!}
-                          :kr-hdlrs {(:left keys) stop-turning!
-                                     (:right keys) stop-turning!
-                                     (:up keys) stop-moving!}}))))
+    (with-meta tank {:updater (make-tank-updater)
+                     :renderer (make-tank-renderer)
+                     :kp-hdlrs {(:left keys) turn-left
+                                (:right keys) turn-right
+                                (:up keys) move-forward
+                                (:fire keys) fire}
+                     :kr-hdlrs {(:left keys) stop-turning
+                                (:right keys) stop-turning
+                                (:up keys) stop-moving}})))
 (defn make-world []
-  (let [world (map make-tank (read-from-file))
+  (let [world (map ref (map make-tank (read-from-file)))
         process-key-event (fn [obj k type]
-                            (when-let [h (((meta @obj) type) k)] (h obj)))
+                            (if-let [h (((meta obj) type) k)]
+                              (h obj)
+                              obj))
         process-key-pressed (fn [obj k] (process-key-event obj k :kp-hdlrs))
         process-key-released (fn [obj k] (process-key-event obj k :kr-hdlrs))]
     (with-meta
       world
       {:key-pressed
-       (fn [code] (doseq [obj world] (process-key-pressed obj code)))
+       (fn [code] (doseq [obj world]
+                    (dosync
+                     (print obj) (print @obj)
+                     (alter obj #(process-key-pressed % code)))))
        :key-released
-       (fn [code] (doseq [obj world] (process-key-released obj code)))
+       (fn [code] (doseq [obj world]
+                    (dosync (alter obj #(process-key-released % code)))))
        :update
        (fn [] (doseq [obj world] (((meta @obj) :updater) obj world)))
        :render

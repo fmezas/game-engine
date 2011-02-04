@@ -1,3 +1,3 @@
 (ns tanks
-  (:use tanks.game))
+  (:use tanks.main))
   (start)

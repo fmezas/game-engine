@@ -17,8 +17,7 @@
   (ImageIO/read (ClassLoader/getSystemResource "tanks/images/fire.gif")))
 (defn load-tank-images []
   (let [angles (range 0 360 15)
-        names (map #(str "tanks/images/tank_" (.replace (format "%3d" %) \ \0) ".gif")
-                   (range 0 360 15))
+        names (map #(str "tanks/images/tank_" (.replace (format "%3d" %) \ \0) ".gif") angles)
         files (map #(ImageIO/read (ClassLoader/getSystemResource %)) names)
         l (map #(list (keyword (str %1)) %2) angles files)]
     (reduce #(apply assoc %1 %2) {} l)))
