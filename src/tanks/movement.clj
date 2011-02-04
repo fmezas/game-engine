@@ -1,9 +1,5 @@
 (ns tanks.movement
   (:use [clojure.contrib.generic.math-functions :only (sin cos abs)]))
-(defn turn [t]
-  (mod (+ (:angle t) (:angular-speed t)) 360))
-(defn rendering-angle [o]
-  (let [a (:angle o)] (- a (mod a 15))))
 (defn move [o]
   (let [a (rendering-angle o)
         r (/ (* Math/PI a) 180)]
@@ -13,9 +9,6 @@
   (let [new-x (:x p)
         new-y (:y p)]
     (or (< new-x 0) (> new-x 468) (< new-y 0) (> new-y 368))))
-(defn move-tank [t]
-  (let [np (move t)]
-    (if (out-of-screen? np) (:position t) np)))
 (defn move-bullet [b]
   (let [np (move b)]
     (if (out-of-screen? np) nil np)))
@@ -25,6 +18,14 @@
                 :y (+ (:y p) 14)}
      :angle (rendering-angle t)
      :speed 4}))
+
+(defn rendering-angle [o]
+  (let [a (:angle o)] (- a (mod a 15))))
+(defn turn [t]
+  (mod (+ (:angle t) (:angular-speed t)) 360))
+(defn move-tank [t]
+  (let [np (move t)]
+    (if (out-of-screen? np) (:position t) np)))
 (defn update-bullet [t]
   (if-let [b (:bullet t)]
     (if-let [np (move-bullet b)]

@@ -1,26 +1,15 @@
 (ns tanks.main
   (:use [clojure.contrib.import-static :only (import-static)]
-        [clojure.contrib.generic.math-functions :only (sin cos abs)]
         tanks.resources
-        tanks.movement
+        [tanks.movement
+         :only (turn rendering-angle move-tank update-bullet
+                     turn-left turn-right stop-turning move-forward
+                     stop-moving fire)]
+        [tanks.collision :only (check-for-impact)]
         engine.core)
   (:import (java.awt Color GraphicsEnvironment)))
 (import-static java.awt.Transparency TRANSLUCENT)
-(let [impact?
-      (fn [p1 p2]
-        (and (> 4 (abs (- (+ (:x p1) 14) (:x p2))))
-             (> 4 (abs (- (+ (:y p1) 14) (:y p2))))))
-      check-for-impact
-      (fn [t world]
-        (when-let [b (:bullet @t)]
-          (doseq [ot world]
-            (if-not (= t ot)
-              (let [pot (:position @ot)
-                    pb (:position b)]
-                (when (impact? pot pb)
-                  (alter ot #(assoc % :hit true :speed 0 :angular-speed 0))
-                  (alter t dissoc :bullet)))))))
-      update-tank
+(let [update-tank
       (fn [t]
         (assoc t
           :angle (turn t)
@@ -67,7 +56,6 @@
       {:key-pressed
        (fn [code] (doseq [obj world]
                     (dosync
-                     (print obj) (print @obj)
                      (alter obj #(process-key-pressed % code)))))
        :key-released
        (fn [code] (doseq [obj world]
