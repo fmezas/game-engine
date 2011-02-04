@@ -1,6 +1,5 @@
 (ns tanks.core-test
   (:use tanks.core
-        clojure.test))
+        midje.sweet))
 
-(deftest replace-me ;; FIXME: write
-  (is false))
+(fact (+ 1 1) => 2)

@@ -1,4 +1,4 @@
-(ns tanks.main
+(ns tanks.core
   (:use [clojure.contrib.import-static :only (import-static)]
         tanks.resources
         [tanks.movement

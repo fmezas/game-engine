@@ -1,5 +1,7 @@
 (ns tanks.movement
   (:use [clojure.contrib.generic.math-functions :only (sin cos abs)]))
+(defn rendering-angle [o]
+  (let [a (:angle o)] (- a (mod a 15))))
 (defn move [o]
   (let [a (rendering-angle o)
         r (/ (* Math/PI a) 180)]
@@ -18,9 +20,6 @@
                 :y (+ (:y p) 14)}
      :angle (rendering-angle t)
      :speed 4}))
-
-(defn rendering-angle [o]
-  (let [a (:angle o)] (- a (mod a 15))))
 (defn turn [t]
   (mod (+ (:angle t) (:angular-speed t)) 360))
 (defn move-tank [t]

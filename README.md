@@ -10,7 +10,7 @@ Game Engine uses [Leiningen](https://github.com/technomancy/leiningen) as its bu
 
 should put you in a clojure repl where you can do
 
-    user=> (use 'tanks.main)
+    user=> (use 'tanks.core)
     user=> (start)
 
 to see a sample game that uses the engine.
