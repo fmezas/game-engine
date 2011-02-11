@@ -1,9 +1,11 @@
 (ns engine.core
   (:use [clojure.contrib.import-static :only (import-static)])
   (:import (javax.swing JFrame JPanel)
-	   (java.awt Color Dimension)
+	   (java.awt Color Dimension GraphicsEnvironment)
 	   (java.awt.event KeyAdapter)))
 (import-static javax.swing.WindowConstants DISPOSE_ON_CLOSE)
+(import-static java.awt.Transparency TRANSLUCENT)
+
 (defn sleep-or-yield [sleep-time end-time excess delays dlys-pr-yld]
   (if (> sleep-time 0)
     (do
@@ -18,46 +20,40 @@
           oversleep-time 0]
       (if yields (Thread/yield))
       [(System/nanoTime) 0 (- excess sleep-time) (if yields 0 delays)])))
-(defn render [world]
-  (((meta world) :render)))
-(defn paint [panel world]
+
+(defn render-image [renderer]
+  (let [gc (.. GraphicsEnvironment getLocalGraphicsEnvironment
+               getDefaultScreenDevice getDefaultConfiguration)
+        ci (.createCompatibleImage gc 500 400 TRANSLUCENT)
+        g (.createGraphics ci)]
+    (.setColor g (Color/white))
+    (.fillRect g 0 0 500 400)
+    (renderer g)
+    (.dispose g)
+    ci))
+
+(defn paint [panel renderer]
   (if-let [g (.getGraphics panel)]
-    (.drawImage g (render world) 0 0 nil)))
-(defn update [world]
-  (((meta world) :update)))
-(defn make-animator [panel world]
+    (.drawImage g (render-image renderer) 0 0 nil)))
+
+(defn make-animator [panel updater renderer still-playing]
   (fn []
-    (let [running (atom true)
-          fps 80
+    (let [fps 80
 	  period (* (/ 1000 fps) 1000000)
 	  delays-per-yield 10]
       (loop [start-time (System/nanoTime)
-	     oversleep-time 0
-	     excess 0
-	     delays 0]
-	(when (and (.isDisplayable panel) @running)
-          (update world)
-          (paint panel world)
+             oversleep-time 0
+             excess 0
+             delays 0]
+        (when (still-playing)
+          (updater)
+          (paint panel renderer)
 	  (let [end-time (System/nanoTime)
-		sleep-time (- period (- end-time start-time) oversleep-time)
+	        sleep-time (- period (- end-time start-time) oversleep-time)
                 [st os xs dlys] (sleep-or-yield sleep-time end-time excess delays delays-per-yield)]
-            (recur (long st) os xs dlys)))))))
-(defn key-pressed [world k]
-  (((meta world) :key-pressed) k))
-(defn key-released [world k]
-  (((meta world) :key-released) k))
-(defn make-key-listener [world]
-  (proxy [KeyAdapter] []
-    (keyPressed [e] (key-pressed world (.getKeyCode e)))
-    (keyReleased [e] (key-released world (.getKeyCode e)))))
-(defn make-panel [key-listener]
-  (let [panel (JPanel.)]
-    (doto panel
-      (.addKeyListener key-listener)
-      (.setBackground (Color/white))
-      (.setPreferredSize (Dimension. 500 400))
-      (.setFocusable true)
-      (.requestFocus))))
+            (recur (long st) os xs dlys))))
+      true)))
+
 (defn make-frame [panel]
   (let [frame (JFrame. "tanks")]
     (doto frame
@@ -66,11 +62,39 @@
       (.pack)
       (.setResizable false)
       (.setVisible true))))
-(defn game [world]
-  (System/setProperty "sun.java2d.opengl" "true")
-  (let [key-listener (make-key-listener world)
+
+(defn make-panel [key-listener]
+  (let [panel (JPanel.)]
+    (doto panel
+      (.addKeyListener key-listener)
+      (.setBackground (Color/white))
+      (.setPreferredSize (Dimension. 500 400))
+      (.setFocusable true)
+      (.requestFocus))))
+
+(defn make-key-listener [key-pressed-fn key-released-fn]
+  (proxy [KeyAdapter] []
+    (keyPressed [e] (key-pressed-fn e))
+    (keyReleased [e] (key-released-fn e))))
+
+(defn displayable? [panel]
+  (.isDisplayable panel))
+
+(defn make-still-playing [running-ref panel]
+  (fn [] (and @running-ref (displayable? panel))))
+
+(defn start-game [animator-fn]
+  (.start (Thread. animator-fn)))
+
+(defn game [& {key-pressed-fn :key-pressed-fn
+               key-released-fn :key-released-fn
+               update-fn :update-fn
+               render-fn :render-fn
+               running-ref :running-ref}]
+  (let [key-listener (make-key-listener key-pressed-fn key-released-fn)
         panel (make-panel key-listener)
-	frame (make-frame panel)
-	animator (make-animator panel world)]
-    (.start (Thread. animator))
-    nil))
+        frame (make-frame panel)
+        still-playing (make-still-playing running-ref panel)
+        animator (make-animator panel update-fn render-fn still-playing)]
+    (start-game animator)
+    true))
