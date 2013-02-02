@@ -1,5 +1,5 @@
 (ns tanks.collision
-  (:use [clojure.contrib.generic.math-functions :only (abs)]))
+  (:use [clojure.math.numeric-tower :only (abs)]))
 (defn impact? [t1 r2]
   (let [t2 @r2]
     (if-let [b2 (:bullet t2)]

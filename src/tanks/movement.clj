@@ -1,13 +1,12 @@
 (ns tanks.movement
-  (:use [tanks.collision :only (hit?)]
-        [clojure.contrib.generic.math-functions :only (sin cos)]))
+  (:use [tanks.collision :only (hit?)]))
 (defn rendering-angle [o]
   (let [a (:angle o)] (- a (mod a 15))))
 (defn move [o]
   (let [a (rendering-angle o)
         r (/ (* Math/PI a) 180)]
-  {:x (+ (:x (:position o)) (* (:speed o) (cos r)))
-   :y (- (:y (:position o)) (* (:speed o) (sin r)))}))
+  {:x (+ (:x (:position o)) (* (:speed o) (Math/cos r)))
+   :y (- (:y (:position o)) (* (:speed o) (Math/sin r)))}))
 (defn out-of-screen? [p]
   (let [new-x (:x p)
         new-y (:y p)]

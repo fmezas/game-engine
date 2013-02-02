@@ -1,5 +1,7 @@
 (defproject tanks "1.0.0-SNAPSHOT"
   :description "basic game engine in clojure with sample game"
-  :dependencies [[org.clojure/clojure "1.3.0"]
-                 [midje "1.1-alpha-1"]]
-  :plugins [[lein-swank "1.4.3"]])
+  :url "https://github.com/fmezas/game-engine#readme"
+  :dependencies [[org.clojure/clojure "1.4.0"]
+                 [org.clojure/math.numeric-tower "0.0.2"]]
+  :profiles {:dev {:dependencies [[midje "1.5-alpha8"]],
+                   :plugins [[lein-midje "2.0.4"]]}})
