@@ -1,11 +1,9 @@
 (ns tanks.core
+  (:gen-class)
   (:use [engine.core :only (game)]
         [tanks.resources :only (read-from-file)]
         [tanks.movement :only (update-tank)]
         [tanks.rendering :only (render-tank)]))
-
-(def kr :key-released)
-(def kp :key-pressed)
 
 (defn find-event-subscribers [e k coll]
   (keep (fn [obj]
@@ -27,29 +25,25 @@
 (defn update-object [obj]
   (dosync
    (alter obj update-tank (get-world-objects))))
-(defn update-world []
+(defn update []
   (doseq [obj (get-world-objects)]
     (update-object obj)))
 
-(defn render-world [g]
+(defn render [g]
   (doseq [obj (get-world-objects)]
     (render-tank (deref obj) g)))
 
 (defn apply-event-to-subscribers [e k]
   (doseq [{handler :handler obj :target} (get-world-event-subscribers e k)]
     (handler obj)))
-(defn subscription-key [e]
-  (.getKeyCode e))
-(defn world-kp [ke]
-  (apply-event-to-subscribers kp (subscription-key ke)))
-(defn world-kr [ke]
-  (apply-event-to-subscribers kr (subscription-key ke)))
+(defn key-pressed [ke]
+  (apply-event-to-subscribers :key-pressed (.getKeyCode ke)))
+(defn key-released [ke]
+  (apply-event-to-subscribers :key-released (.getKeyCode ke)))
 
 (defn start []
   (init-world)
-  (game
-   :key-pressed-fn world-kp
-   :key-released-fn world-kr
-   :update-fn update-world
-   :render-fn render-world
-   :running-ref (atom true)))
+  (game key-pressed key-released update render))
+
+(defn -main [& args]
+  (start))

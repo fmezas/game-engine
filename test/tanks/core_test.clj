@@ -1,7 +1,5 @@
 (ns tanks.core_test
-  (:use tanks.core
-        midje.sweet)
-  (:import (java.awt Color)))
+  (:use tanks.core midje.sweet))
 
 (fact
  (find-event-subscribers anything anything []) => [])

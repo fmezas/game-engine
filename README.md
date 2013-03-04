@@ -14,3 +14,7 @@ should put you in a clojure repl where you can do
     user=> (start)
 
 to see a sample game that uses the engine.
+
+Or from the command line:
+
+    $ lein run

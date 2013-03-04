@@ -14,7 +14,6 @@
          :angle 0
          :speed 0
          :angular-speed 0
-         :keys {:left VK_LEFT :right VK_RIGHT :up VK_UP :fire VK_DOWN}
          :key-pressed {VK_LEFT #(dosync (alter % turn-left))
                        VK_RIGHT #(dosync (alter % turn-right))
                        VK_UP #(dosync (alter % move-forward))
@@ -26,7 +25,6 @@
          :angle 180
          :speed 0
          :angular-speed 0
-         :keys {:left VK_A :right VK_D :up VK_W :fire VK_S}
          :key-pressed {VK_A #(dosync (alter % turn-left))
                        VK_D #(dosync (alter % turn-right))
                        VK_W #(dosync (alter % move-forward))

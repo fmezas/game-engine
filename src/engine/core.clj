@@ -6,20 +6,24 @@
 (import-static javax.swing.WindowConstants DISPOSE_ON_CLOSE)
 (import-static java.awt.Transparency TRANSLUCENT)
 
-(defn sleep-or-yield [sleep-time end-time excess delays dlys-pr-yld]
+(defn sleep-or-yield [sleep-time end-time
+                      ;;excess
+                      delays dlys-pr-yld]
   (if (> sleep-time 0)
     (do
       (Thread/sleep (/ sleep-time 1000000))
       [(System/nanoTime)
        (- (- (System/nanoTime) end-time) sleep-time)
-       excess
+       ;;excess
        delays])
     (let [delays (inc delays)
           yields (>= delays dlys-pr-yld)
-          excess (- sleep-time)
+          ;;excess (- sleep-time)
           oversleep-time 0]
       (if yields (Thread/yield))
-      [(System/nanoTime) 0 (- excess sleep-time) (if yields 0 delays)])))
+      [(System/nanoTime) 0
+       ;;(- excess sleep-time)
+       (if yields 0 delays)])))
 
 (defn render-image [renderer]
   (let [gc (.. GraphicsEnvironment getLocalGraphicsEnvironment
@@ -36,22 +40,28 @@
   (if-let [g (.getGraphics panel)]
     (.drawImage g (render-image renderer) 0 0 nil)))
 
-(defn make-animator [panel updater renderer still-playing]
+(defn make-animator [panel updater renderer]
   (fn []
     (let [fps 80
 	  period (* (/ 1000 fps) 1000000)
 	  delays-per-yield 10]
       (loop [start-time (System/nanoTime)
              oversleep-time 0
-             excess 0
+             ;;excess 0
              delays 0]
-        (when (still-playing)
+        (when (.isDisplayable panel)
           (updater)
           (paint panel renderer)
 	  (let [end-time (System/nanoTime)
 	        sleep-time (- period (- end-time start-time) oversleep-time)
-                [st os xs dlys] (sleep-or-yield sleep-time end-time excess delays delays-per-yield)]
-            (recur (long st) os xs dlys))))
+                [st os
+                 ;;xs
+                 dlys] (sleep-or-yield sleep-time end-time
+                                       ;;excess
+                                       delays delays-per-yield)]
+            (recur (long st) os
+                   ;;xs
+                   dlys))))
       true)))
 
 (defn make-frame [panel]
@@ -77,24 +87,13 @@
     (keyPressed [e] (key-pressed-fn e))
     (keyReleased [e] (key-released-fn e))))
 
-(defn displayable? [panel]
-  (.isDisplayable panel))
-
-(defn make-still-playing [running-ref panel]
-  (fn [] (and @running-ref (displayable? panel))))
-
 (defn start-game [animator-fn]
   (.start (Thread. animator-fn)))
 
-(defn game [& {key-pressed-fn :key-pressed-fn
-               key-released-fn :key-released-fn
-               update-fn :update-fn
-               render-fn :render-fn
-               running-ref :running-ref}]
+(defn game [key-pressed-fn key-released-fn update-fn render-fn]
   (let [key-listener (make-key-listener key-pressed-fn key-released-fn)
         panel (make-panel key-listener)
         frame (make-frame panel)
-        still-playing (make-still-playing running-ref panel)
-        animator (make-animator panel update-fn render-fn still-playing)]
+        animator (make-animator panel update-fn render-fn)]
     (start-game animator)
     true))
