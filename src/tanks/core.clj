@@ -43,7 +43,7 @@
 
 (defn start []
   (init-world)
-  (game key-pressed key-released update render))
+  (game key-pressed key-released update render {:width 500 :length 400}))
 
 (defn -main [& args]
   (start))

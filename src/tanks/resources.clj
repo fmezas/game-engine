@@ -9,6 +9,28 @@
                              stop-turning)])
   (:import (javax.imageio ImageIO)))
 (import-static java.awt.event.KeyEvent VK_LEFT VK_RIGHT VK_UP VK_DOWN VK_A VK_D VK_W VK_S)
+
+(defn- load-fire-image []
+  (ImageIO/read (ClassLoader/getSystemResource "tanks/images/fire.gif")))
+(defn- load-bullet-image []
+  (ImageIO/read (ClassLoader/getSystemResource "tanks/images/bullet.gif")))
+(defn- load-tank-images []
+  (let [angles (range 0 360 15)
+        names (map #(str "tanks/images/tank_" (.replace (format "%3d" %) \ \0) ".gif") angles)
+        files (map #(ImageIO/read (ClassLoader/getSystemResource %)) names)
+        l (map #(list (keyword (str %1)) %2) angles files)]
+    (reduce #(apply assoc %1 %2) {} l)))
+
+(let [imgs (load-tank-images)
+      fire-img (load-fire-image)
+      bullet-img (load-bullet-image)]
+  (defn get-image [obj]
+    (imgs (keyword (str (rendering-angle obj)))))
+  (defn get-fire-image [] fire-img)
+  (defn get-bullet-image [] bullet-img))
+
+;; TODO: the idea is that this function should read the game resources
+;; from an external location instead of having them hardcoded here
 (defn read-from-file []
   (list {:position {:x 100 :y 100}
          :angle 0
@@ -32,20 +54,3 @@
          :key-released {VK_A #(dosync (alter % stop-turning))
                         VK_D #(dosync (alter % stop-turning))
                         VK_W #(dosync (alter % stop-moving))}}))
-(defn load-fire-image []
-  (ImageIO/read (ClassLoader/getSystemResource "tanks/images/fire.gif")))
-(defn load-bullet-image []
-  (ImageIO/read (ClassLoader/getSystemResource "tanks/images/bullet.gif")))
-(defn load-tank-images []
-  (let [angles (range 0 360 15)
-        names (map #(str "tanks/images/tank_" (.replace (format "%3d" %) \ \0) ".gif") angles)
-        files (map #(ImageIO/read (ClassLoader/getSystemResource %)) names)
-        l (map #(list (keyword (str %1)) %2) angles files)]
-    (reduce #(apply assoc %1 %2) {} l)))
-(let [imgs (load-tank-images)
-      fire-img (load-fire-image)
-      bullet-img (load-bullet-image)]
-  (defn get-image [obj]
-    (imgs (keyword (str (rendering-angle obj)))))
-  (defn get-fire-image [] fire-img)
-  (defn get-bullet-image [] bullet-img))

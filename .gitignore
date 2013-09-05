@@ -3,4 +3,5 @@ pom.xml
 lib
 .lein*
 target
+classes
 *~

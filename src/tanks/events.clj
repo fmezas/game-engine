@@ -13,7 +13,7 @@
 (defn stop-turning [t]
   (if-not (:hit t) (assoc t :angular-speed 0) t))
 (defn move-forward [t]
-  (if-not (:hit t) (assoc t :speed 1) t))
+  (if-not (:hit t) (assoc t :speed 2) t))
 (defn stop-moving [t]
   (if-not (:hit t) (assoc t :speed 0) t))
 (defn fire [t]
